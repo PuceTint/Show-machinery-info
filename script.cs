@@ -13,16 +13,15 @@ using System.Collections.Generic;
 // Make text objects invisible when detail view or onlyDetailVIew is off
 // </summary>
 
-namespace ShowMachineryInfo
+namespace DisplayMachineryDetail
 {
     public class Mod
     {
         // TODO Machinery Adding procedure:
         // 1. Add new Getcomponent<>() to if statement in OnItemSpawned
         // 2. Add new behaviour at AttributeManifest
-        // 3. numObjects++
-        // 4. Add X = GetComponent<>(), and X to if statement in void Awake()
-        // 5. Add case to UpdateInfo()
+        // 3. Add X = GetComponent<>(), and X to if statement in void Awake()
+        // 4. Add case to UpdateInfo()
 
         // Whether mod works only in detail view
         public static bool onlyDetailView = true;
@@ -74,7 +73,12 @@ namespace ShowMachineryInfo
                 || obj.Instance.GetComponent<DetectorBehaviour>()
                 || obj.Instance.GetComponent<MagnetBehaviour>()
                 || obj.Instance.GetComponent<LEDBulbBehaviour>()
-                || obj.Instance.GetComponent<GateBehaviour>())
+                || obj.Instance.GetComponent<GateBehaviour>()
+                || obj.Instance.GetComponent<RotorBehaviour>()
+                || obj.Instance.GetComponent<ResistorBehaviour>()
+                || obj.Instance.GetComponent<MetronomeBehaviour>()
+                || obj.Instance.GetComponent<CarBehaviour>()
+                || obj.Instance.GetComponentInChildren<WinchBehaviour>())
                 {
                     // Add AttributeManifest
                     obj.Instance.GetOrAddComponent<AttributeManifest>();
@@ -98,11 +102,8 @@ namespace ShowMachineryInfo
         // time until a check is made for changes in machinery attributes
         float timeUntilCheck = 0f;
 
-        // number of objects to seek
-        static int numObjects = 8;
-
         // GameObject index:
-        // boatMotor, button, lagbox, keyTrigger, detector, magnet, ledBulb, gate
+        // boatMotor, button, lagbox, keyTrigger, detector, magnet, ledBulb, gate, rotor, resistor, metronome, wheel
         int objIndex = -1;
 
         // LEDBulb color
@@ -117,6 +118,11 @@ namespace ShowMachineryInfo
         MagnetBehaviour magnet; // .Reversed
         LEDBulbBehaviour ledBulb; // .Color
         GateBehaviour gate; // .ThresholdPercentage .MaxPower .DoubleTrigger
+        RotorBehaviour rotor; // .Speed in [-8k, 8k]
+        ResistorBehaviour resistor; // .ResistorPower  in [0, 1]
+        MetronomeBehaviour metronome; // .TempoModifier (Hz)
+        CarBehaviour wheel; // .MotorSpeed -500 = forward, 500 = reverse
+        WinchBehaviour winch; // .LowerLimit, .UpperLimit (m)
 
         // machinery position, rotation, scale etc.
         Transform pos;
@@ -127,10 +133,9 @@ namespace ShowMachineryInfo
         
 
         // On borne
-        // TODO FIX when two objects are spawned very quickly, the second one does not have the text?? 
-        // TODO check if each component, make one behaviour for non-null component, work only with that behaviour 
         void Awake()
         {
+            // to transform position, scale etc. of object
             pos = GetComponent<Transform>();
 
             // get the behaviour
@@ -142,6 +147,11 @@ namespace ShowMachineryInfo
             magnet = GetComponent<MagnetBehaviour>();
             ledBulb = GetComponent<LEDBulbBehaviour>();
             gate = GetComponent<GateBehaviour>();
+            rotor = GetComponent<RotorBehaviour>();
+            resistor = GetComponent<ResistorBehaviour>();
+            metronome = GetComponent<MetronomeBehaviour>();
+            wheel = GetComponent<CarBehaviour>();
+            winch = GetComponentInChildren<WinchBehaviour>();
 
             if (boatMotor) 
             { 
@@ -155,6 +165,15 @@ namespace ShowMachineryInfo
             else if (magnet) { objIndex = 5; }
             else if (ledBulb) { objIndex = 6; }
             else if (gate) { objIndex = 7; }
+            else if (rotor) { objIndex = 8; }
+            else if (resistor) { objIndex = 9; }
+            else if (metronome) { objIndex = 10; }
+            else if (wheel) { objIndex = 11; }
+            else if (winch)
+            {
+                objIndex = 12; 
+                // the winch base has the behaviour, but not the winch
+            }
 
             // Initial empty text object setup
             AttrObject = new GameObject();
@@ -258,12 +277,33 @@ namespace ShowMachineryInfo
                                                                 + "\nMaxPower: " + gate.GetComponent<GateBehaviour>().MaxPower
                                                                 + "\n" + Utils.IsDoubleGate(gate);
                         break;
+                    
+                    case 8: // rotor
+                        AttrObject.GetComponent<TextMesh>().text = "Speed: " + rotor.GetComponent<RotorBehaviour>().Speed;
+                        break;
+                    
+                    case 9: // resistor
+                        AttrObject.GetComponent<TextMesh>().text = "Power: " + resistor.GetComponent<ResistorBehaviour>().ResistorPower.ToString("F2");
+                        break;
+
+                    case 10: // metronome
+                        AttrObject.GetComponent<TextMesh>().text = "Hz: " + metronome.GetComponent<MetronomeBehaviour>().TempoModifier;
+                        break;
+
+                    case 11: // wheel
+                        AttrObject.GetComponent<TextMesh>().text = Utils.IsReversedWheel(wheel)
+                                                                + "\n" + Utils.IsBrakeEngaged(wheel);
+                        break;
+
+                    case 12: // winch
+                        AttrObject.GetComponent<TextMesh>().text = $"in [{winch.GetComponentInChildren<WinchBehaviour>().LowerLimit}, {winch.GetComponentInChildren<WinchBehaviour>().UpperLimit}]";
+                        break;
                 }
             }
             else if (AttrObject != null)
             {
                 UnityEngine.Object.Destroy(AttrObject);
-            }
+            }   
         }
     }
 }

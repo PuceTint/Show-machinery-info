@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ShowMachineryInfo
+namespace DisplayMachineryDetail
 {
     public class Utils
     {
@@ -42,6 +42,18 @@ namespace ShowMachineryInfo
         {
             if (magnet.GetComponent<MagnetBehaviour>().Reversed) { return "Repell"; }
             else { return "Attract"; }
+        }
+
+        // wheel
+        public static string IsBrakeEngaged(CarBehaviour wheel)
+        {
+            if (wheel.GetComponent<CarBehaviour>().IsBrakeEngaged) { return ""; }
+            else { return "No brake"; }
+        }
+        public static string IsReversedWheel(CarBehaviour wheel)
+        {
+            if (wheel.GetComponent<CarBehaviour>().MotorSpeed > 0) { return "Reversed"; }
+            else { return ""; }
         }
     }
 }

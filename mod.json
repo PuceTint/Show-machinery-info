@@ -1,11 +1,11 @@
 {
-  "Name": "Show machinery detail",
+  "Name": "Always display machinery detail",
   "Author": "Puce",
   "Description": "On-screen display of attributes for machinery items when in detail view",
   "ModVersion": "1.0",
   "GameVersion": "1.23.7",
   "ThumbnailPath": "thumb.png",
-  "EntryPoint": "ShowMachineryInfo.Mod",
+  "EntryPoint": "DisplayMachineryDetail.Mod",
   "Tags": [],
   "Scripts": [
     "script.cs",
