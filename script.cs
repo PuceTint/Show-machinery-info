@@ -77,11 +77,14 @@ namespace DisplayMachineryDetail
                 || obj.Instance.GetComponent<RotorBehaviour>()
                 || obj.Instance.GetComponent<ResistorBehaviour>()
                 || obj.Instance.GetComponent<MetronomeBehaviour>()
-                || obj.Instance.GetComponent<CarBehaviour>()
-                || obj.Instance.GetComponentInChildren<WinchBehaviour>())
+                || obj.Instance.GetComponent<CarBehaviour>())
                 {
                     // Add AttributeManifest
                     obj.Instance.GetOrAddComponent<AttributeManifest>();
+                }
+                else if (obj.Instance.GetComponentInChildren<WinchBehaviour>())
+                {
+                    obj.Instance.GetComponentInChildren<WinchBehaviour>().gameObject.GetOrAddComponent<AttributeManifest>();
                 }
             };
 
@@ -169,11 +172,7 @@ namespace DisplayMachineryDetail
             else if (resistor) { objIndex = 9; }
             else if (metronome) { objIndex = 10; }
             else if (wheel) { objIndex = 11; }
-            else if (winch)
-            {
-                objIndex = 12; 
-                // the winch base has the behaviour, but not the winch
-            }
+            else if (winch){objIndex = 12; }
 
             // Initial empty text object setup
             AttrObject = new GameObject();
@@ -253,8 +252,8 @@ namespace DisplayMachineryDetail
                         AttrObject.GetComponent<TextMesh>().text = Utils.IsDoubleKey(keyTrigger);
                         break;
 
-                    case 4: // detector, 1.213636
-                        AttrObject.GetComponent<TextMesh>().text = "Range: " + detector.GetComponent<DetectorBehaviour>().Range / 1.213636f
+                    case 4: // detector, 1.213636f
+                        AttrObject.GetComponent<TextMesh>().text = $"Range: {detector.GetComponent<DetectorBehaviour>().Range * Global.MetricMultiplier}"
                                                                 + "\n" + Utils.IsDoubleDetector(detector);
                         break;
                         
@@ -273,7 +272,7 @@ namespace DisplayMachineryDetail
                         break;
                     
                     case 7: // gate
-                        AttrObject.GetComponent<TextMesh>().text = "Threshold%: " + gate.GetComponent<GateBehaviour>().ThresholdPercentage
+                        AttrObject.GetComponent<TextMesh>().text = "Threshold: " + gate.GetComponent<GateBehaviour>().ThresholdPercentage
                                                                 + "\nMaxPower: " + gate.GetComponent<GateBehaviour>().MaxPower
                                                                 + "\n" + Utils.IsDoubleGate(gate);
                         break;
