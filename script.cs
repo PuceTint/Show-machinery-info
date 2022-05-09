@@ -65,7 +65,6 @@ namespace DisplayMachineryDetail
             ModAPI.Register<AttributeManifest>();
 
             ModAPI.OnItemSpawned += (sender, obj) => {              
-                // if (behaviours.Intersection(obj.Instance.GetComponents())
                 if(obj.Instance.GetComponent<BoatMotorBehaviour>()
                 || obj.Instance.GetComponent<ButtonBehaviour>() // Both big and small buttons
                 || obj.Instance.GetComponent<LagboxBehaviour>()
@@ -108,9 +107,6 @@ namespace DisplayMachineryDetail
         // GameObject index:
         // boatMotor, button, lagbox, keyTrigger, detector, magnet, ledBulb, gate, rotor, resistor, metronome, wheel
         int objIndex = -1;
-
-        // LEDBulb color
-        int c;
 
         // machinery behaviours
         BoatMotorBehaviour boatMotor; // .Force -   -25 = reverse, 25 = forward
