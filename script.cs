@@ -76,7 +76,10 @@ namespace DisplayMachineryDetail
                 || obj.Instance.GetComponent<RotorBehaviour>()
                 || obj.Instance.GetComponent<ResistorBehaviour>()
                 || obj.Instance.GetComponent<MetronomeBehaviour>()
-                || obj.Instance.GetComponent<CarBehaviour>())
+                || obj.Instance.GetComponent<CarBehaviour>()
+                || obj.Instance.GetComponent<LaserBehaviour>()
+                || obj.Instance.GetComponent<HoverThrusterBehaviour>()
+                || obj.Instance.GetComponent<DamagableMachineryBehaviour>())
                 {
                     // Add AttributeManifest
                     obj.Instance.GetOrAddComponent<AttributeManifest>();
@@ -93,6 +96,7 @@ namespace DisplayMachineryDetail
                 {
                     AttributeManifest objInstance = obj.Instance.GetComponent<AttributeManifest>();
                     UnityEngine.Object.Destroy(objInstance.AttrObject);
+                    UnityEngine.Object.Destroy(objInstance.damageabilityObject);
                 }
             };
         }
@@ -113,23 +117,27 @@ namespace DisplayMachineryDetail
         ButtonBehaviour button; // .TriggerOnExit - isdouble
         LagboxBehaviour lagbox; // .DelayModifier - delay
         KeyTriggerBehaviour keyTrigger; //.DoubleTrigger
-        DetectorBehaviour detector; // .TriggerOnExit, .Range
+        DetectorBehaviour detector; // .TriggerOnExit, .Range: game units
         MagnetBehaviour magnet; // .Reversed
-        LEDBulbBehaviour ledBulb; // .Color
+        LEDBulbBehaviour ledBulb; // .Color r,g,b
         GateBehaviour gate; // .ThresholdPercentage .MaxPower .DoubleTrigger
         RotorBehaviour rotor; // .Speed in [-8k, 8k]
         ResistorBehaviour resistor; // .ResistorPower  in [0, 1]
         MetronomeBehaviour metronome; // .TempoModifier (Hz)
         CarBehaviour wheel; // .MotorSpeed -500 = forward, 500 = reverse
         WinchBehaviour winch; // .LowerLimit, .UpperLimit (m)
+        LaserBehaviour laser; // .UserSetColour r,g,b
+        HoverThrusterBehaviour hoverThruster; // .BaseHoverHeight: game units
+        // General behaviour of machinery: damageability.
+        DamagableMachineryBehaviour damageableMachinery; // .Destroyed .Indestructible
 
         // machinery position, rotation, scale etc.
         Transform pos;
 
 
-        // array for text objects for each any GameObject
+        // text objects for each any GameObject
         public GameObject AttrObject;
-        
+        public GameObject damageabilityObject;
 
         // On borne
         void Awake()
@@ -151,12 +159,12 @@ namespace DisplayMachineryDetail
             metronome = GetComponent<MetronomeBehaviour>();
             wheel = GetComponent<CarBehaviour>();
             winch = GetComponentInChildren<WinchBehaviour>();
+            laser = GetComponent<LaserBehaviour>();
+            hoverThruster = GetComponent<HoverThrusterBehaviour>();
 
-            if (boatMotor) 
-            { 
-                objIndex = 0; 
-                // funkcja = Utils.IsForward(boatMotor); 
-            } 
+            damageableMachinery = GetComponent<DamagableMachineryBehaviour>();
+
+            if (boatMotor) {objIndex = 0;} 
             else if (button) { objIndex = 1; }
             else if (lagbox) { objIndex = 2; }
             else if (keyTrigger) { objIndex = 3; }
@@ -169,6 +177,8 @@ namespace DisplayMachineryDetail
             else if (metronome) { objIndex = 10; }
             else if (wheel) { objIndex = 11; }
             else if (winch){objIndex = 12; }
+            else if (laser) { objIndex = 13; }
+            else if (hoverThruster) { objIndex = 14; }
 
             // Initial empty text object setup
             AttrObject = new GameObject();
@@ -177,6 +187,14 @@ namespace DisplayMachineryDetail
             AttrObject.GetComponent<TextMesh>().fontSize = 32;
             AttrObject.GetComponent<TextMesh>().anchor = TextAnchor.MiddleCenter;
             AttrObject.layer = 16;
+
+            damageabilityObject = new GameObject();
+            damageabilityObject.transform.localScale = new Vector3(0.03f, 0.03f, 1f);
+            damageabilityObject.AddComponent<TextMesh>();
+            damageabilityObject.GetComponent<TextMesh>().fontSize = 32;
+            damageabilityObject.GetComponent<TextMesh>().anchor = TextAnchor.MiddleCenter;
+            damageabilityObject.layer = 16;
+            damageabilityObject.GetComponent<TextMesh>().color = Color.yellow;
         }
 
         void OnDestroy()
@@ -200,12 +218,19 @@ namespace DisplayMachineryDetail
             if (!Mod.onlyDetailView || Mod.onlyDetailView && Global.main.ShowLimbStatus)
             {
                 // update attribute position
-                if (AttrObject != null && AttrObject.GetComponent<TextMesh>().text != "")
+                if (AttrObject != null && AttrObject.GetComponent<TextMesh>().text != ""
+                    || damageabilityObject != null && damageabilityObject.GetComponent<TextMesh>().text != "")
                 {
                     float height = pos.transform.localScale[1];
+                    float width = pos.transform.localScale[0];
+
                     AttrObject.transform.position = pos.transform.position + new Vector3(0f, -0.03f - 0.2f * height, 0f);
                     AttrObject.transform.localScale = new Vector3(1f, 1f, 1f) *Mathf.Sqrt(height) / 50;
                     AttrObject.transform.rotation = new Quaternion(0f, 0f, 0f, 0f);
+
+                    damageabilityObject.transform.position = pos.transform.position + new Vector3(0.03f + 0.2f * width ,0f , 0f);
+                    damageabilityObject.transform.localScale = new Vector3(1f, 1f, 1f) *Mathf.Sqrt(width) / 50;
+                    damageabilityObject.transform.rotation = new Quaternion(0f, 0f, 0f, 0f);
                 }
             }
         }
@@ -227,7 +252,18 @@ namespace DisplayMachineryDetail
                 AttrObject.GetComponent<TextMesh>().fontSize = 32;
                 AttrObject.GetComponent<TextMesh>().anchor = TextAnchor.MiddleCenter;
                 AttrObject.layer = 16;
+
+                damageabilityObject = new GameObject();
+                damageabilityObject.transform.localScale = new Vector3(0.06f, 0.06f, 1f);
+                damageabilityObject.AddComponent<TextMesh>();
+                damageabilityObject.GetComponent<TextMesh>().fontSize = 32;
+                damageabilityObject.GetComponent<TextMesh>().anchor = TextAnchor.MiddleCenter;
+                damageabilityObject.GetComponent<TextMesh>().color = Color.yellow;
+                damageabilityObject.layer = 16;
                 }
+
+                // color for some behaviours
+                Color c;
             
                 // Further text object setup for each attribute
                 switch (objIndex){
@@ -259,7 +295,7 @@ namespace DisplayMachineryDetail
                     
                     case 6: // ledBulb
                         // color
-                        Color c = ledBulb.GetComponent<LEDBulbBehaviour>().Color;
+                        c = ledBulb.GetComponent<LEDBulbBehaviour>().Color;
                         // rgb(r, g, b)
                         AttrObject.GetComponent<TextMesh>().text = "rgb(" 
                                                                     + c.r.ToString("F2") + ", " 
@@ -293,11 +329,31 @@ namespace DisplayMachineryDetail
                     case 12: // winch
                         AttrObject.GetComponent<TextMesh>().text = $"in [{winch.GetComponentInChildren<WinchBehaviour>().LowerLimit}, {winch.GetComponentInChildren<WinchBehaviour>().UpperLimit}]";
                         break;
+
+                    case 13: // laser
+                        c = laser.GetComponent<LaserBehaviour>().UserSetColour;
+                        AttrObject.GetComponent<TextMesh>().text = "rgb(" 
+                                                                    + c.r.ToString("F2") + ", " 
+                                                                    + c.g.ToString("F2") + ", " 
+                                                                    + c.b.ToString("F2") + ")";
+                        break;
+
+                    case 14: // hoverThruster
+                        AttrObject.GetComponent<TextMesh>().text = "Height:" + hoverThruster.GetComponent<HoverThrusterBehaviour>().BaseHoverHeight * Global.MetricMultiplier;
+                        break;
+                }
+
+                if (GetComponent<DamagableMachineryBehaviour>())
+                {
+                    // damageabilityObject.GetComponent<TextMesh>().color = Color.yellow;
+                    damageabilityObject.GetComponent<TextMesh>().text = Utils.IsIndestructible(damageableMachinery)
+                                                                        + "\n" + Utils.IsDestroyed(damageableMachinery);
                 }
             }
             else if (AttrObject != null)
             {
                 UnityEngine.Object.Destroy(AttrObject);
+                UnityEngine.Object.Destroy(damageabilityObject);
             }   
         }
     }

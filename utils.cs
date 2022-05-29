@@ -52,7 +52,19 @@ namespace DisplayMachineryDetail
         }
         public static string IsReversedWheel(CarBehaviour wheel)
         {
-            if (wheel.GetComponent<CarBehaviour>().MotorSpeed > 0) { return "Reversed"; }
+            if (wheel.GetComponent<CarBehaviour>().MotorSpeed > 0) { return "Reverse"; }
+            else { return ""; }
+        }
+
+        // Damageable checks
+        public static string IsIndestructible(DamagableMachineryBehaviour damageable)
+        {
+            if (damageable.GetComponent<DamagableMachineryBehaviour>().Indestructible) { return "∞"; }
+            else { return ""; }
+        }
+        public static string IsDestroyed(DamagableMachineryBehaviour damageable)
+        {
+            if (damageable.GetComponent<DamagableMachineryBehaviour>().Destroyed) { return "Broken"; }
             else { return ""; }
         }
     }
